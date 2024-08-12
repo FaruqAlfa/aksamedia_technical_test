@@ -13,12 +13,7 @@ return new class extends Migration
     {
         Schema::create('devisions', function (Blueprint $table) {
             $table->id();
-            $table->string('Mobile apps');
-            $table->string('QA');
-            $table->string('Full Stack');
-            $table->string('Backend');
-            $table->string('Frontend');
-            $table->string('UI/UX Designer');
+            $table->string('devision_name');
             $table->timestamps();
         });
     }
