@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use function Laravel\Prompts\error;
+use Illuminate\Support\Facades\Auth;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -46,6 +48,24 @@ class AuthController extends Controller
             ]
 
         ]);
+    }
+
+    public function logout(Request $request){
+        $user = Auth::user();
+
+        if($user) {
+            PersonalAccessToken::where('tokenable_id', $user->id)->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Logout Berhasil',
+            ], 200);
+        }
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'User not authenticated',
+        ], 401);
     }
 
 }
