@@ -14,58 +14,78 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        $request->validate([
-            'username' => 'required|string',
-            'password' => 'required',
-        ]);
+        try {
+            $request->validate([
+                'username' => 'required|string',
+                'password' => 'required',
+            ]);
 
-        //check if user exists
-        $user = User::where('username', $request->username)->first();
+            // pengecekan apakah user terdaftar
+            $user = User::where('username', $request->username)->first();
 
-        //check password eith hash
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response([
-                'status' => error('Username atau password tidak ditemukan'),
-                'message' => 'Login gagal'
-            ], 404);
-        }
+            // Check password
+            if (!$user || !Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Username atau password tidak ditemukan'
+                ], 404);
+            }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Login Berhasil',
-            'data' => [
-                    'token' => $token,
-
-                'admin' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'username' => $user->username,
-                    'phone' => $user->phone,
-                    'email' => $user->email,
-                ]
-            ]
-
-        ]);
-    }
-
-    public function logout(Request $request){
-        $user = Auth::user();
-
-        if($user) {
-            PersonalAccessToken::where('tokenable_id', $user->id)->delete();
+            $token = $user->createToken('auth_token')->plainTextToken;
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Logout Berhasil',
-            ], 200);
-        }
+                'message' => 'Login Berhasil',
+                'data' => [
+                    'token' => $token,
+                    'admin' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'username' => $user->username,
+                        'phone' => $user->phone,
+                        'email' => $user->email,
+                    ]
+                ]
+            ]);
 
-        return response()->json([
-            'status' => 'error',
-            'message' => 'User not authenticated',
-        ], 401);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat login',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function logout(Request $request)
+    {
+        try {
+            //pengecekan apakah user sedang login
+            $user = Auth::user();
+
+            //jika terdaftar maka hapus token
+            if ($user) {
+                PersonalAccessToken::where('tokenable_id', $user->id)->delete();
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Logout Berhasil',
+                ], 200);
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not authenticated',
+            ], 401);
+
+            //jika tidak terdaftar kembalikan pesan error
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Terjadi kesalahan saat logout',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
 }
