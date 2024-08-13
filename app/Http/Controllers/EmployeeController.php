@@ -80,16 +80,16 @@ class EmployeeController extends Controller
             ],
         ]);
     }
-
+    
     public function update(Request $request, $uuid)
     {
-         // request validation
-         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:15',
-            'division' => 'required|exists:divisions,id',
+        // request validation
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'phone' => 'required|string',
+            'division_id' => 'required|exists:divisions,id',
             'position' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif', // Gambar opsional
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         // Cek apakah validasi gagal
@@ -110,12 +110,6 @@ class EmployeeController extends Controller
             ], 404);
         }
 
-        // Update data karyawan
-        $employee->name = $request->name;
-        $employee->phone = $request->phone;
-        $employee->division_id = $request->division;
-        $employee->position = $request->position;
-
         // Cek jika file gambar ada di request
         if ($request->hasFile('image')) {
             // Hapus gambar lama jika ada
@@ -128,14 +122,17 @@ class EmployeeController extends Controller
             $employee->image = $imagePath;
         }
 
-        // Simpan perubahan
+        // Update data karyawan
+        $employee->name = $request->input('name');
+        $employee->phone = $request->input('phone');
+        $employee->division_id = $request->input('division_id');
+        $employee->position = $request->input('position');
         $employee->save();
 
         return response()->json([
             'status' => 'success',
             'message' => 'Employee updated successfully',
         ], 200);
-    
     }
 
     public function destroy($uuid)
